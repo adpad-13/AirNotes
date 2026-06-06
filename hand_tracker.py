@@ -18,7 +18,18 @@ def process_result(result,output_image,timestamp_ms):
     global latest_result
     latest_result = result
     
-        
+def crop_and_resize(canvas):
+    gray_canvas = cv2.cvtColor(canvas,cv2.COLOR_RGB2GRAY)    
+    rows , cols = np.nonzero(gray_canvas)
+    if rows.size > 0 and cols.size > 0:  
+        y_min = rows.min()
+        y_max=rows.max()
+        x_min = cols.min()
+        x_max = cols.max()
+        cropped_canvas = gray_canvas[y_min:y_max,x_min:x_max]
+        resized_canvas = cv2.resize(cropped_canvas,(28,28)) 
+        return resized_canvas
+
 
 options  = vision.HandLandmarkerOptions(
     base_options = mp_base_options.BaseOptions(model_asset_path = 'hand_landmarker.task'),
@@ -53,7 +64,7 @@ def main():
                 thumb = latest_result.hand_landmarks[0][4]
                 index = latest_result.hand_landmarks[0][8]
                 dist = math.sqrt((thumb.x-index.x)**2 + (thumb.y-index.y)**2) 
-                print(dist)
+                
                 if dist<0.025:
                     is_drawing = True
                 elif dist> 0.045:
@@ -77,7 +88,9 @@ def main():
             
             if not is_drawing and last_draw_time > 0:
                 if(time.time() - last_draw_time)> 1.5:
-                    print("character saved")
+                    char_image = crop_and_resize(canvas)
+                    if char_image is not None:
+                        print("character shape",char_image.shape)
 
                     canvas = np.zeros((height,width,3),dtype=np.uint8)
 
