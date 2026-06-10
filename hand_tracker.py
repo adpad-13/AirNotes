@@ -7,6 +7,8 @@ from mediapipe.tasks.python.core import base_options as mp_base_options
 from mediapipe.tasks.python import vision
 import numpy as np
 from collections import deque
+import torch
+from predictor import predict_characters,load_model
 
 smooth_x = deque(maxlen=3)
 smooth_y = deque(maxlen=3)
@@ -26,7 +28,7 @@ def crop_and_resize(canvas):
         y_max=rows.max()
         x_min = cols.min()
         x_max = cols.max()
-        cropped_canvas = gray_canvas[y_min:y_max,x_min:x_max]
+        cropped_canvas = gray_canvas[y_min-15:y_max+15,x_min-15:x_max+15]
         resized_canvas = cv2.resize(cropped_canvas,(28,28)) 
         return resized_canvas
 
@@ -41,6 +43,9 @@ options  = vision.HandLandmarkerOptions(
     result_callback = process_result
 )
 def main():
+
+    device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = load_model("emnist_cnn_weights.pth",device)
     
     global prev_x , prev_y , smooth_x , smooth_y
     with vision.HandLandmarker.create_from_options(options) as landmarker:
@@ -82,7 +87,7 @@ def main():
                     avg_x = int(sum(smooth_x)/len(smooth_x))
                     avg_y = int(sum(smooth_y)/len(smooth_y))
                     if prev_x is not None:
-                        cv2.line(canvas, (prev_x,prev_y),(avg_x,avg_y),(0,0,255),2)
+                        cv2.line(canvas, (prev_x,prev_y),(avg_x,avg_y),(255,255,255),7)
                     prev_x = avg_x
                     prev_y= avg_y
             
@@ -90,7 +95,12 @@ def main():
                 if(time.time() - last_draw_time)> 1.5:
                     char_image = crop_and_resize(canvas)
                     if char_image is not None:
-                        print("character shape",char_image.shape)
+                        cv2.imshow("CNN Input (Press Q to close)", cv2.resize(char_image, (280, 280)))
+                        prediction = predict_characters(model, char_image, device)
+   
+                        EMNIST_MAPPING = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabdefghnqrt"
+                        predicted_char = EMNIST_MAPPING[prediction]
+                        print(f"Raw ID: {prediction} | AirNotes Predicts: {predicted_char}")
 
                     canvas = np.zeros((height,width,3),dtype=np.uint8)
 

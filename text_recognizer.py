@@ -11,6 +11,7 @@ class CNN(nn.Module):
         self.FC1 = nn.Linear(1024,256)
         self.FC2 = nn.Linear(256,47)
         self.flatten = nn.Flatten()
+        self.dropout = nn.Dropout()
     
     def forward(self,x):
         x = self.conv1(x)
@@ -22,10 +23,8 @@ class CNN(nn.Module):
         x = self.flatten(x)
         x = self.FC1(x)
         x = self.relu(x)
+        x = self.dropout(x)
         x = self.FC2(x)
         return x
     
-model = CNN()
-dummy = torch.randn(1,1,28,28)
-output = model(dummy)
-print(output.shape)
+

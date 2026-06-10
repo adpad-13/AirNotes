@@ -1,0 +1,13 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Datasets
+data/
+*.zip
+
+# PyTorch Model Weights
+*.pth
+
+# Temporary execution files
+tempCodeRunnerFile.py
