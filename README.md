@@ -91,10 +91,10 @@ https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/
 ---
 
 ## Project Status
-**M1 Complete** — Hand tracking, pen detection, smooth drawing, 
+**M1 Completed** — Hand tracking, pen detection, smooth drawing, 
 character extraction pipeline working at native camera fps  
-**M2 In Progress** — CNN training on EMNIST  
-**M3 Planned** — Text assembly, word segmentation, export pipeline
+**M2 Completed** — CNN training on EMNIST  
+**M3 Completed** — Char recognition, adding to pdf, export pipeline
 
 ---
 
