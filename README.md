@@ -40,13 +40,14 @@ into words and sentences, exported as .txt or .pdf.
 - 28×28 grayscale output ready for CNN inference
 - AR overlay — strokes drawn directly over live camera feed
 - Auto-canvas clear on pen lift (1.5s timeout)
+- CNN character recognition (EMNIST)
+- Word-level segmentation and text assembly
+- PDF export pipeline
 
 ---
 
 ## Planned Features
-- CNN character recognition (EMNIST → fine-tuned on custom data)
-- Word-level segmentation and text assembly
-- PDF / .txt export pipeline
+- Adding vision transformer for word identification
 - Autocorrect and spell-check layer
 - Voice recognition integration
 - Emoji identification from drawn symbols
