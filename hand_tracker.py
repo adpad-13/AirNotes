@@ -9,6 +9,7 @@ import numpy as np
 from collections import deque
 import torch
 from predictor import predict_characters,load_model
+import pymupdf
 
 smooth_x = deque(maxlen=3)
 smooth_y = deque(maxlen=3)
@@ -28,7 +29,7 @@ def crop_and_resize(canvas):
         y_max=rows.max()
         x_min = cols.min()
         x_max = cols.max()
-        cropped_canvas = gray_canvas[y_min-15:y_max+15,x_min-15:x_max+15]
+        cropped_canvas = gray_canvas[y_min-20:y_max+20,x_min-20:x_max+20]
         resized_canvas = cv2.resize(cropped_canvas,(28,28)) 
         return resized_canvas
 
@@ -46,6 +47,15 @@ def main():
 
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = load_model("emnist_cnn_weights.pth",device)
+    doc = pymupdf.open()
+    page = doc.new_page()
+    tw = pymupdf.TextWriter(page.rect)
+    font = pymupdf.Font("helv")
+    font_size = 20
+    start_x = 50;
+    start_y = 72
+    point = pymupdf.Point(50, 72)
+    
     
     global prev_x , prev_y , smooth_x , smooth_y
     with vision.HandLandmarker.create_from_options(options) as landmarker:
@@ -95,12 +105,21 @@ def main():
                 if(time.time() - last_draw_time)> 1.5:
                     char_image = crop_and_resize(canvas)
                     if char_image is not None:
-                        cv2.imshow("CNN Input (Press Q to close)", cv2.resize(char_image, (280, 280)))
+                        
                         prediction = predict_characters(model, char_image, device)
    
                         EMNIST_MAPPING = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabdefghnqrt"
                         predicted_char = EMNIST_MAPPING[prediction]
+                        
+                        point = pymupdf.Point(start_x, start_y)
+                        tw.append(point,predicted_char, font=font, fontsize=font_size)
                         print(f"Raw ID: {prediction} | AirNotes Predicts: {predicted_char}")
+
+                        char_width = font.text_length(predicted_char, fontsize=font_size)
+                        letter_gap = 2
+                        start_x += (char_width + letter_gap)
+
+                    
 
                     canvas = np.zeros((height,width,3),dtype=np.uint8)
 
@@ -111,9 +130,12 @@ def main():
         
             cv2.imshow('camera feed',new_frame)
             if cv2.waitKey(1) & 0xFF == ord('q'): break
-
+        
         cap.release()
         cv2.destroyAllWindows()
+        tw.write_text(page,color='red')
+        doc.save("new_document.pdf")
+        doc.close()
 
 
 if __name__ == "__main__":
